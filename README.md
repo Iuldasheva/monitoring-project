@@ -9,7 +9,7 @@ Ansible — установка Filebeat как systemd-сервиса (вне Do
 
 ## 📁 Структура проекта
 
-    project-root/
+    monitoring-project/
     ├── docker/
     │   ├── docker-compose.yml
     │   ├── prometheus/
