@@ -1,0 +1,20 @@
+---
+- name: Install and configure Fluentd
+  hosts: localhost
+  become: true
+
+  tasks:
+    - name: Install td-agent (Fluentd)
+      apt:
+        deb: https://packages.treasuredata.com/4/ubuntu/focal/pool/contrib/t/td-agent/td-agent_4.5.0-0_amd64.deb
+
+    - name: Configure Fluentd
+      copy:
+        src: ../fluentd/fluent.conf
+        dest: /etc/td-agent/td-agent.conf
+
+    - name: Ensure td-agent is running
+      systemd:
+        name: td-agent
+        enabled: yes
+        state: restarted
