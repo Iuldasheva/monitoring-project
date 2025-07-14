@@ -1,0 +1,30 @@
+- name: Install and configure Filebeat locally
+  hosts: local
+  become: yes
+
+  tasks:
+    - name: Check if Filebeat installed
+      command: filebeat version
+      register: fb_check
+      ignore_errors: yes
+
+    - name: Download and install Filebeat DEB if not installed
+      apt:
+        deb: "https://artifacts.elastic.co/downloads/beats/filebeat/filebeat-7.17.9-amd64.deb"
+        state: present
+      when: fb_check.rc != 0
+
+    - name: Copy Filebeat config
+      copy:
+        src: files/filebeat.yml
+        dest: /etc/filebeat/filebeat.yml
+        owner: root
+        group: root
+        mode: 0644
+
+    - name: Enable and restart Filebeat service
+      systemd:
+        name: filebeat
+        enabled: yes
+        state: restarted
+
