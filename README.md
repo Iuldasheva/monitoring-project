@@ -1,23 +1,43 @@
 
-# Monitoring with Grafana + Prometheus + Fluentd
+# Система мониторинга с Docker Compose и сбором логов через Ansible
 
-## Установка
+## Компоненты
+- Prometheus для сбора метрик с сервиса логов
+- Grafana для визуализации метрик
+- Filebeat (локальный systemd-сервис) для сбора логов контейнеров и записи в /var/log/test
 
+## Развертывание
+
+### 1. Запуск мониторинга (Docker Compose)
 ```bash
-cd monitoring && docker-compose up -d
-cd ../ansible && ansible-playbook playbook.yml
-```
+cd monitoring
+docker-compose up -d
+
 
 ## Проверка
 
 - Grafana доступна: `http://<IP>:80`
-- В Grafana → Explore найдите метрики: `fluentd_output_status_emit_count`, `fluentd_input_status_emit_count`
-- Логи пишутся в `/var/log/test`
+- Prometheus на http://<IP>:9090
+
+2. Установка сервиса сбора логов
+cd monitoring/ansible
+ansible-playbook playbook.yml
+
+Сервис filebeat запущен и собирает логи из контейнеров в /var/log/test
+
+Метрики, собираемые Prometheus:
+
+filebeat_events_total — количество обработанных логов по контейнерам
+В Grafana можно использовать Explore для поиска метрик по названию
+Проверка
+
+Логи контейнеров должны появляться в /var/log/test с указанием контейнера
+В Grafana на дашборде "Logs Metrics" должны отображаться метрики из Prometheus
+
 
 ## Стек:
 - Docker Compose: Grafana + Prometheus
-- Ansible: Установка Fluentd на хост
-- Fluentd: tail логов Docker, запись в файл, отдача метрик Prometheus
+- Ansible: Установка Filebeat на хост
+- Filebeat: tail логов Docker, запись в файл, отдача метрик Prometheus
 =======
-# monitoring-with-fluentd
->>>>>>> 0a63842e7a790f28152f0766150dea15afed2f1a
+

@@ -1,0 +1,80 @@
+---
+- name: Install and configure Filebeat for container logs
+  hosts: localhost
+  become: yes
+
+  vars:
+    filebeat_output_path: /var/log/test/container-logs.log
+    container_logs_glob: /var/lib/docker/containers/*/*.log  # путь к логам Docker контейнеров
+    filebeat_config_file: /etc/filebeat/filebeat.yml
+
+  tasks:
+    - name: Install required dependencies
+      ansible.builtin.apt:
+        name:
+          - apt-transport-https
+          - ca-certificates
+          - gnupg
+        update_cache: yes
+        state: present
+
+    - name: Add Elastic GPG key
+      ansible.builtin.apt_key:
+        url: https://artifacts.elastic.co/GPG-KEY-elasticsearch
+        state: present
+
+    - name: Add Filebeat APT repository
+      ansible.builtin.apt_repository:
+        repo: "deb https://artifacts.elastic.co/packages/7.x/apt stable main"
+        state: present
+        filename: elastic-7.x
+
+    - name: Install Filebeat
+      ansible.builtin.apt:
+        name: filebeat
+        state: present
+        update_cache: yes
+
+    - name: Ensure output directory exists
+      ansible.builtin.file:
+        path: /var/log/test
+        state: directory
+        mode: '0755'
+
+    - name: Configure Filebeat to collect container logs
+      ansible.builtin.copy:
+        dest: "{{ filebeat_config_file }}"
+        owner: root
+        group: root
+        mode: '0644'
+        content: |
+          filebeat.inputs:
+            - type: log
+              enabled: true
+              paths:
+                - "{{ container_logs_glob }}"
+              json.keys_under_root: true
+              json.add_error_key: true
+              multiline.pattern: '^\s'
+              multiline.negate: false
+              multiline.match: after
+              fields:
+                log_source: docker
+              fields_under_root: true
+
+          output.file:
+            path: "/var/log/test"
+            filename: "container-logs.log"
+            codec.format:
+              string: '%{[@timestamp]} %{[container_id]} %{[message]}'
+
+          setup.template.enabled: false
+          setup.dashboards.enabled: false
+          monitoring.enabled: false
+
+    - name: Enable and restart Filebeat
+      ansible.builtin.service:
+        name: filebeat
+        enabled: yes
+        state: restarted
+
