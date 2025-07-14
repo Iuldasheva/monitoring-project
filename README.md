@@ -1,3 +1,4 @@
+
 # Monitoring with Grafana + Prometheus + Fluentd
 
 ## Установка
@@ -17,3 +18,6 @@ cd ../ansible && ansible-playbook playbook.yml
 - Docker Compose: Grafana + Prometheus
 - Ansible: Установка Fluentd на хост
 - Fluentd: tail логов Docker, запись в файл, отдача метрик Prometheus
+=======
+# monitoring-with-fluentd
+>>>>>>> 0a63842e7a790f28152f0766150dea15afed2f1a
